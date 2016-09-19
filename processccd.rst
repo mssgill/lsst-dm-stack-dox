@@ -72,8 +72,55 @@ The ‘ds9’ flag tells it to bring up ds9 (if installed) and show the post-ISR
             - assemble raw amplifier images into an exposure with image, variance and mask planes
     
 	    
-Specific functions of IsrTask
-+++++++++++++++++++++++++++++
+Specific functions of IsrTask via example
++++++++++++++++++++++++++++++++++++++++++
+
+We will follow the simple steps in runIsrTask to trace how a specific
+code would process ISR -- it will be different for every camera and
+exposure.
+
+The first several lines of runIsrTask (after imports) define a
+function runIsr that has the following in it::
+
+    #Create the isr task with modified config
+    isrConfig = IsrTask.ConfigClass()
+    isrConfig.doBias = False #We didn't make a zero frame
+    isrConfig.doDark = True
+    isrConfig.doFlat = True
+    isrConfig.doFringe = False #There is no fringe frame for this example
+
+The first line indicates this is a section about setting up the
+configuration that the code will be run with.  The next several set up
+specific flags, indicating that we will not do bias or fringing
+corrections in this code, but will do the dark and flat corrections.
+
+We then define parameters that we will use to make the raw, flat and
+dark exposures, using knowledge of our camera and exposures::
+  
+    DARKVAL = 2. #e-/sec
+    OSCAN = 1000. #DN
+    GRADIENT = .10
+    EXPTIME = 15 #seconds
+    DARKEXPTIME = 40. #seconds
+
+Next, make the 3 exposures that we will be using in this example to create the final corrected output exposure::
+
+  
+    darkExposure = exampleUtils.makeDark(DARKVAL, DARKEXPTIME)
+    flatExposure = exampleUtils.makeFlat(GRADIENT)
+    rawExposure = exampleUtils.makeRaw(DARKVAL, OSCAN, GRADIENT, EXPTIME)
+
+(We are using functions defined in exampleUtils, also in the examples subdir inside      $IP_ISR_DIR, these are modified versions of the standard functions inside the full Utils pkg (where is this?). 
+
+Finally, the output is produced with the line::
+
+       output = isrTask.run(rawExposure, dark=darkExposure, flat=flatExposure)
+
+And returned at the end of the function
+
+(The 'main' function of runIsrTask simply calls this runIsr function, and also brings
+up ds9 to view the final output exposure if that flag is set on, and
+writes the img to disk if that flag is set.)
 
 
 Bias correction
