@@ -4,7 +4,7 @@
    contain the root `toctree` directive.
 
 LSST DM Stack documentation
-====================
+============================
 
 We want to try to understand how the current DM Stack processes images, showing the steps in an interactive format.
 
@@ -16,7 +16,26 @@ We want to try to understand how the current DM Stack processes images, showing 
  - Magenta = lines of code
 
 
-We will take the worked out ci_hsc pkg as an example, and we assume the user has this installed already, along with the entire DM Stack for the cmds to work.  For quick pointers on where to go to know how to do the install, see the first link below.
+We will take the worked out ci_hsc pkg as an example, and we assume
+the user has this installed already, along with the entire DM Stack
+for the cmds to work.  For quick pointers on where to go to know how
+to do the install, see the first link in the 'Contents' below.
+
+Brief description of image processing
+--------------------------------------
+
+Image processing is one of the first steps that are undertaken in
+analyzing data from a telescope for any purpose, be it astronomical,
+astrophysical, or cosmological.  It generally consists of a few
+separable steps:
+
+ - Remove image defects in each CCD through ISR
+ - Assemble the CCD's together into a large single image
+ - Do characterization of the image
+
+We'll now describe each of these steps in more detail.
+
+-----------
 
 Contents:
 
@@ -26,4 +45,6 @@ Contents:
    install
    ingest
    processccd
+   charimg
+   assembleccd
    
