@@ -1,7 +1,9 @@
-ProcessCcd
-==========
+Processing a CCD
+================
 
-Next, let’s look inside processCcd.py::
+Next, we will look at the actual steps of how an image is processed from raw data to a science-grade image that can be used in analyses.
+
+Let’s do this by looking inside the primary function which does this in the stack -- processCcd.py, which can be executed as so::
 
 	python pathToExecutableVersionOf/processCcd.py pathTo/DATA --VariousFlags
 
@@ -9,13 +11,19 @@ Real example version for me::
 
  python $LSSTSW/stack/DarwinX86/pipe_tasks/2016_01.0-35-g183e2ce/bin/processCcd.py $LSSTSW/ci_hsc/DATA --rerun ci_hsc --id visit=903986 ccd=23 --doraise
 
-General outline of what processCcd does:
+Now the most general outline of the steps processCcd takes:
 
-1. Remove instrument signature: Call isr to unpersist raw data and assemble it into a post-ISR exposure.
+1. Does the instrumental signature removal (ISR): it calls IsrTask to
+   process the raw data and assemble it into a post-ISR exposure.
    
-2. Characterize image to estimate PSF and background: Call charImage subtract background, fit a PSF model, repair cosmic rays, detect and measure bright sources, and measure aperture correction.
+2. Characterizes the image to estimate PSF and background: Calls
+   charImage which subtracts the background, fits a PSF model, repairs
+   cosmic rays, detects and measures bright sources, and measures the
+   aperture correction.
    
-3. Calibrate astrometry and photometry: Call calibrate to perform deep detection, deblending and single-frame measurement, refine the WCS and fit the photometric zero-points.
+3. Calibrate astrometry and photometry: Calls calibrateTask to perform deep
+   detection, deblending and single-frame measurement, refine the WCS
+   and fit the photometric zero-points.
 
 
 Doing the Instrumental Signature Removal
@@ -28,17 +36,17 @@ for correcting imaging data is very similar from camera to camera,
 depending on the image, various of the defects will be present and
 need to be removed, and thus the sequence of steps taken will vary
 from image to image.  Generally these corrections are done one CCD at
-a time (but all 16 amplifiers at once), and that is how the DM code
-ingests and processes the information.
+a time, but with all the amplifiers at once for a CCD.  This is how
+the DM code ingests and processes the information.
 
 The ISR code is at::
    
      $IP_ISR_DIR/python/lsst/ip/isr/isrTask.py.
 
 
-IsrTask provides a vanilla implementation of doing these corrections,
-including the ability to turn certain corrections off if they are not
-needed.
+IsrTask provides a generic vanilla implementation of doing these
+corrections, including the ability to turn certain corrections off if
+they are not needed.
 
 The inputs to the primary method, 'run', are a raw exposure to be
 corrected and the calibration data products. The raw input is a single
@@ -47,14 +55,15 @@ non-science pixels.
 
 IsrTask performs instrument signature removal on an exposure following these overall steps:
 
-- Detects saturation, apply overscan correction, bias subtraction, dark and flat
+- Detects saturation, apply overscan correction, bias subtraction, dark correction and flat-fielding 
 - Performs CCD assembly
 - Masks known bad pixels
 - Interpolates over defects, saturated pixels and all NaNs
 - Provides a preliminary WCS
 
 
-Functions the code is capable of handling, though not all are used, depending on an image (alphabetical order):
+Functions the code is capable of handling, though not all are used,
+depending on an image (in alphabetical order):
 
 - Bias 
 - Brighter fatter correction:
@@ -89,9 +98,9 @@ The ‘ds9’ flag tells it to bring up ds9 (if installed) and show the post-ISR
 Specific functions of IsrTask via example
 +++++++++++++++++++++++++++++++++++++++++
 
-We will follow the simple steps in runIsrTask to trace how a specific
-code would do ISR processing -- it will be different for every camera and
-exposure.
+To use a concrete example, we will follow the simple steps in
+runIsrTask to trace how a specific code would do ISR processing -- it
+will be different for every camera and exposure.
 
 The first several lines of runIsrTask (after imports) define a
 function runIsr that has the following in it::
@@ -111,14 +120,13 @@ corrections in this code, but will do the dark and flat corrections.
 It then defines parameters that it will use to make the raw, flat and
 dark exposures, using knowledge of our camera and exposures::
   
-    DARKVAL = 2. #e-/sec
-    OSCAN = 1000. #DN
+    DARKVAL = 2.      # Number of electrons per sec
+    OSCAN = 1000.     # DN = Data Number, same as the standard ADU
     GRADIENT = .10
-    EXPTIME = 15 #seconds
-    DARKEXPTIME = 40. #seconds
+    EXPTIME = 15      # Seconds for the science exposure
+    DARKEXPTIME = 40. # Seconds for the dark exposure
 
 Next, it makes the 3 exposures that we will be using in this example to create the final corrected output exposure::
-
   
     darkExposure = exampleUtils.makeDark(DARKVAL, DARKEXPTIME)
     flatExposure = exampleUtils.makeFlat(GRADIENT)
@@ -168,7 +176,7 @@ corresponding filter.
 Other ISR steps
 +++++++++++++++
 
-Now we'll describe a few corrections that are not in the example, but
+Now we describe corrections that are not in the example, but
 that IsrTask can also take correct for, leading to final corrected
 images.
 
@@ -203,9 +211,10 @@ Cross-Talk Correction
 ----------------------
 
 Cross-talk introduces a small fraction of the signal from one CCD into
-the signal chain of the CCD that shares the same electronics, resulting in “ghosts” of bright objects appearing in the paired CCD. This is an
-additive effect, and is most noticeable for sources that are very bright, at or
-near saturation.
+the signal chain of the CCD that shares the same electronics,
+resulting in “ghosts” of bright objects appearing in the
+paired CCD. This is an additive effect, and is most noticeable for
+sources that are very bright, at or near saturation.
 
 (Not clear if LSST CCDs will need this correction, so the pipeline has
 a placeholder for it, should it be necessary, but no cross-talk
@@ -214,11 +223,11 @@ correction is implemented at this time.)
 Fringe Pattern Correction
 -------------------------
 
-A fringe pattern is many detectors in particularly the reddest
-filters: the iʹ′-, zʹ′-, and y-bands. The pattern occurs because of
+A fringe pattern is present in many detectors in particularly the reddest
+filters: the i-, z-, and y-bands. The pattern occurs because of
 interference between the incident, nearly monochromatic light from
 night sky emission lines (both from air glow from particular
-components of the atmosphere, especially OH, and from reflected city
+components of the atmosphere, and from reflected city
 lights) and the layers of the CCD substrate. The details of the fringe
 pattern depend mostly upon the spatial variation in thickness of the
 top layer of the substrate, but also depend upon a number of other
@@ -235,12 +244,32 @@ The response of the CCD detectors to radiation is highly linear for
 pixels that are not near saturation, to typically better than 0.1% for
 most recent cameras.
 
-
-Currently, no linearity correction is applied in the pipelines.
+Currently, no linearity correction is applied in the DM pipelines.
 
 Were a correction necessary it would likely be implemented with a
 look-up table, and executed following the dark correction but prior to
 fringe correction.
+
+Saturation Correction
+---------------------
+
+At the start of pipeline processing the pixel values are examined to
+detect saturation (which will naturally also identify bleed trails
+near saturated targets, and the strongest cosmic rays). These values,
+along with pixels that are identified in the list of static bad
+pixels, are flagged in the data quality mask of the science image.
+All pixels in the science array identified as “bad” in this sense are
+interpolated over, in order to avoid problems with source detection
+and with code optimization for other downstream pipeline processing.
+
+Interpolation is performed with a linear predictive code, as was done
+for the Sloan Digital Sky Survey (SDSS). The PSF is taken to be a
+Gaussian with sigma width equal to one pixel when deriving the
+coefficients. For interpolating over most defects the interpolation is
+only done in the x-direction, extending 2 pixels on each side of the
+defect. This is done both for simplicity and to ameliorate the way
+that saturation trails interact with bad columns.
+
 
 ____
 
