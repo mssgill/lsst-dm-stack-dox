@@ -5,11 +5,74 @@ Next, we will look at the actual steps of how an image is processed from raw dat
 
 Let’s do this by looking inside the primary function which does this in the stack -- processCcd.py, which can be executed as so::
 
-	python pathToExecutableVersionOf/processCcd.py pathTo/DATA --VariousFlags
+  processCcd.py pathTo/DATA --VariousFlags
 
-Real example version for me::
+(This works directly from the cmd line because processCcd.py is actually an executable which will be in your path when all is set up correctly.)
+	
+Real example version from the ci_hsc dir::
 
- python $LSSTSW/stack/DarwinX86/pipe_tasks/2016_01.0-35-g183e2ce/bin/processCcd.py $LSSTSW/ci_hsc/DATA --rerun ci_hsc --id visit=903986 ccd=23 --doraise
+  processCcd.py $LSSTSW/ci_hsc/DATA --rerun ci_hsc --id visit=903986 ccd=23 --doraise
+
+Overview of what ProcessCcd.py Does
++++++++++++++++++++++++++++++++++++
+
+ProcessCcd as a whole executes many of the functions that are in
+multiple packages in other codes.  For example, it will correct the
+images for all the issues involved in taking a raw image CCD through
+to a processed one by first doing everything that astronomers have
+used a medley of custom codes typically for each telescope before
+(like IRAF, UNIX shellscripts, IDL etc.).  This is usually grouped
+together as 'Instrumental Signature Removal' (e.g. doing the bias and
+dark current corrections, flat-fielding, etc.)
+
+The second step is what is lumped together as 'Image
+Characterization', which does object detection (very commonly done by
+SExtractor), repairs cosmic ray defects, measures and subtracts sky
+background, and then finally measures bright sources and use this to
+estimate background and PSF of an exposure (which is often done
+currently by astronomers using the PSFex code).
+
+The last is what we'll call 'Image Calibration', which measures faint
+sources, does the astrometry by fitting an improved WCS to the image
+(often done currently by astronomers using by using the SCAMP and
+SWARP codes), and figures out the photometric zero-point for the image.
+
+
+
+-- [Considering including a list of some things IsrTask does with some general descriptions:]
+
+- Removing the dark current (the residual current seen even when no
+light is falling on the sensors)
+
+- Flat-fielding (correcting for the different responsivity of the
+current coming from pixels to the same amount of light falling on
+them),
+
+- Doing the brighter fatter correction (accounting for the distortion
+of the electric field lines at the bottom of pixels when bright
+objects liberate many charges that get trapped at the bottom of the
+potential wells),
+
+- Bias
+
+- Fringing
+
+- Gain
+
+- Linearization
+
+- Mask defects, and interpolate over them
+
+- Overscan
+
+- Saturation detection
+
+- Saturation interpln
+
+- Suspect pixel detection
+
+Brief Outline with Subtask Code Names
+++++++++++++++++++++++++++++++++++++++
 
 Now the most general outline of the steps processCcd takes:
 
@@ -26,8 +89,8 @@ Now the most general outline of the steps processCcd takes:
    and fit the photometric zero-points.
 
 
-Doing the Instrumental Signature Removal
-+++++++++++++++++++++++++++++++++++++++++
+Details of Doing the Instrumental Signature Removal
+++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 Instrumental Signature Removal (ISR) is a sequence of steps taken to
 'clean' images of various aspects of defects that any system of optics
@@ -63,22 +126,37 @@ IsrTask performs instrument signature removal on an exposure following these ove
 
 
 Functions the code is capable of handling, though not all are used,
-depending on an image (in alphabetical order):
+depending on an image (in alphabetical order), with the links here going to the actual code:
 
-- Bias 
-- Brighter fatter correction:
-- Dark
-- Flat-fielding
+- `Bias`_
+.. _Bias: https://lsst-web.ncsa.illinois.edu/doxygen/x_masterDoxyDoc/classlsst_1_1ip_1_1isr_1_1isr_task_1_1_isr_task.html#aa6ccdf9dcf1735c5ed90c2c23e496725
+- `Brighter fatter correction`_
+.. _Brighter fatter correction: https://lsst-web.ncsa.illinois.edu/doxygen/x_masterDoxyDoc/classlsst_1_1ip_1_1isr_1_1isr_task_1_1_isr_task.html#abcef49896d412c901f42e960dce9e280
+- `Dark`_
+.. _Dark: https://lsst-web.ncsa.illinois.edu/doxygen/x_masterDoxyDoc/classlsst_1_1ip_1_1isr_1_1isr_task_1_1_isr_task.html#ab41dc49d2b1df5388fe3f653bfadcfd6 
+- `Flat-fielding`_
+.. _Flat-fielding: https://lsst-web.ncsa.illinois.edu/doxygen/x_masterDoxyDoc/classlsst_1_1ip_1_1isr_1_1isr_task_1_1_isr_task.html#ae6918c99805e1f902687842a7b09cf56
+
 - Fringing
-- Gain
-- Linearization
-- Mask defects, and interpolate over them
-- Mask NaNs 
-- Overscan
-- Saturation detection
-- Saturation interpln
-- Suspect pixel detection
-- Update variance plane 
+
+- `Gain`_
+.. _Gain: https://lsst-web.ncsa.illinois.edu/doxygen/x_masterDoxyDoc/classlsst_1_1ip_1_1isr_1_1isr_task_1_1_isr_task.html#ae1a9c9352c1c1064957726788209362a
+- `Linearization`_ 
+.. _Linearization: https://lsst-web.ncsa.illinois.edu/doxygen/x_masterDoxyDoc/classlsst_1_1ip_1_1isr_1_1isr_task_1_1_isr_task.html#aea4a28fc61394c45adbb104248828e60
+- `Mask defects, and interpolate over them`_ 
+.. _Mask defects, and interpolate over them: https://lsst-web.ncsa.illinois.edu/doxygen/x_masterDoxyDoc/classlsst_1_1ip_1_1isr_1_1isr_task_1_1_isr_task.html#ac938896ee62ee77619f07fb85de47350
+- `Mask NaNs`_  
+.. _Mask NaNs: https://lsst-web.ncsa.illinois.edu/doxygen/x_masterDoxyDoc/classlsst_1_1ip_1_1isr_1_1isr_task_1_1_isr_task.html#a5ae0dffccdb1be2188a1538baed45412
+- `Overscan`_ 
+.. _Overscan: https://lsst-web.ncsa.illinois.edu/doxygen/x_masterDoxyDoc/classlsst_1_1ip_1_1isr_1_1isr_task_1_1_isr_task.html#a5e5c48656c428d20fb981a6858ee98cb
+- `Saturation detection`_ 
+.. _Saturation detection: https://lsst-web.ncsa.illinois.edu/doxygen/x_masterDoxyDoc/classlsst_1_1ip_1_1isr_1_1isr_task_1_1_isr_task.html#a853d9470afa9e178fb42bb050e6fc3a4
+- `Saturation interpln`_ 
+.. _Saturation interpln: https://lsst-web.ncsa.illinois.edu/doxygen/x_masterDoxyDoc/classlsst_1_1ip_1_1isr_1_1isr_task_1_1_isr_task.html#a7d6b3e4ec6233d1da18a514be8d82f63
+- `Suspect pixel detection`_ 
+.. _Suspect pixel detection: https://lsst-web.ncsa.illinois.edu/doxygen/x_masterDoxyDoc/classlsst_1_1ip_1_1isr_1_1isr_task_1_1_isr_task.html#a0fd004b4c3ec4dfd9e8779421a806c4a
+- `Update variance plane`_ 
+.. _Update variance plane: https://lsst-web.ncsa.illinois.edu/doxygen/x_masterDoxyDoc/classlsst_1_1ip_1_1isr_1_1isr_task_1_1_isr_task.html#a8f5afe71d7d8b7bc824fd15f63257b8f
 
 If you want to see an example of the ISR algorithm in action, run the example while in the $IP_ISR_DIR as follows::
 
@@ -207,6 +285,26 @@ If they are the same size, it takes the masked science exposure and
 simply does a straight subtraction (pixel by pixel) of the bias
 exposure, and returns this.
 
+Brighter-Fatter Correction
+--------------------------
+
+The Brighter-Fatter Correction is the standard name now given to the
+correction that has to be done in the era of 'precision astronomy'
+(though it has always been present in images at some level) because a
+pixel tower 'fills up' with electrons at the bottom of the silicon
+layer when many photons hit the top of the detector, altering the
+normal electric field lines set up to trap all the electrons liberated
+from normal photon hits in that tower, and forcing some of the
+resultant electrons into neighboring pixels.  This requires careful
+treatment to correct for that is the subject of ongoing research, but
+the currently implemented model is a fairly advanced one that takes a
+kernel that has been derived from flat field images to redistribute
+the charge.
+
+(This method in particular is described in substantial detail in the
+docstring currently in the code.)
+
+
 Cross-Talk Correction
 ----------------------
 
@@ -237,6 +335,9 @@ focal ratio of the incident beam. The amplitude of the fringe pattern
 background varies with time and telescope pointing.
 
 
+Gain
+----
+
 Linearity Correction
 --------------------
 
@@ -249,6 +350,33 @@ Currently, no linearity correction is applied in the DM pipelines.
 Were a correction necessary it would likely be implemented with a
 look-up table, and executed following the dark correction but prior to
 fringe correction.
+
+Mask defects
+------------
+
+Masked pixel interpolation
+----------------------------
+
+Mask NaNs
+------------
+
+Masked NaN interpolation
+----------------------------
+
+
+Overscan Correction
+-------------------
+
+This is similar in structure to bias etc. -- except the function
+overscanCorrection in isr.py is quite long and extensive, and has
+several interpln choices etc.
+
+
+Saturation detection
+---------------------
+
+This one is fairly straightforward, most of the work is done in makeThresholdMask in isr.p
+
 
 Saturation Correction
 ---------------------
@@ -270,7 +398,15 @@ only done in the x-direction, extending 2 pixels on each side of the
 defect. This is done both for simplicity and to ameliorate the way
 that saturation trails interact with bad columns.
 
+Suspect pixel detection
+------------------------
+
+This seems to be part of the overscan correction in isr.py
+
+Update variance plane
+-----------------------
 
 ____
+
 
 [Reference: Doxygen comments in code, and Section 4 of LSST DATA CHALLENGE HANDBOOK (2011) ]
