@@ -1,13 +1,17 @@
 Processing a CCD
 ================
 
-Next, we will look at the actual steps of how an image is processed from raw data to a science-grade image that can be used in analyses.
+Next, we will look at the actual steps of how an image is processed
+from raw data to a science-grade image that can be used in analyses.
 
-Let’s do this by looking inside the primary function which does this in the stack -- processCcd.py, which can be executed as so::
+Let’s do this by looking inside the primary function which does this
+in the stack -- processCcd.py, which can be executed as so::
 
   processCcd.py pathTo/DATA --VariousFlags
 
-(This works directly from the cmd line because processCcd.py is actually an executable which will be in your path when all is set up correctly.)
+(This works directly from the cmd line because processCcd.py is
+actually an executable which will be in your path when all is set up
+correctly.)
 	
 Real example version from the ci_hsc dir::
 
@@ -17,70 +21,51 @@ Overview of what ProcessCcd.py Does
 +++++++++++++++++++++++++++++++++++
 
 ProcessCcd as a whole executes many of the functions that are in
-multiple packages in other codes.  For example, it will correct the
-images for all the issues involved in taking a raw image CCD through
-to a processed one by first doing everything that astronomers have
-used a medley of custom codes typically for each telescope before
-(like IRAF, UNIX shellscripts, IDL etc.).  This is usually grouped
-together as 'Instrumental Signature Removal' (e.g. doing the bias and
-dark current corrections, flat-fielding, etc.)
+multiple packages in other astronomy analysis frameworks.  For
+example, it will correct the images for all the issues involved in
+taking a raw image CCD through to a processed one (e.g. doing the bias
+and dark current corrections, flat-fielding, etc.) by first doing
+everything that astronomers have used a medley of customized codes
+typically for each telescope before (like IRAF, UNIX shellscripts, IDL
+scripts etc.).  This is usually grouped together as 'Instrumental
+Signature Removal.'
 
 The second step is what is lumped together as 'Image
-Characterization', which does object detection (very commonly done by
-SExtractor), repairs cosmic ray defects, measures and subtracts sky
-background, and then finally measures bright sources and use this to
-estimate background and PSF of an exposure (which is often done
-currently by astronomers using the PSFex code).
+Characterization', which includes for our purposes: object detection
+(very commonly done by SExtractor), repairing of cosmic ray defects,
+measuring and subtracting of sky background, and then finally measuring
+bright sources and using this to estimate background and PSF of an
+exposure (which is often done currently by astronomers using the PSFex
+code).
 
 The last is what we'll call 'Image Calibration', which measures faint
 sources, does the astrometry by fitting an improved WCS to the image
 (often done currently by astronomers using by using the SCAMP and
-SWARP codes), and figures out the photometric zero-point for the image.
+SWARP codes, 'pinning' the image on the positions of known stars), and
+figures out the photometric zero-point for the image.
 
 
 
--- [Considering including a list of some things IsrTask does with some general descriptions:]
 
-- Removing the dark current (the residual current seen even when no
-light is falling on the sensors)
 
-- Flat-fielding (correcting for the different responsivity of the
-current coming from pixels to the same amount of light falling on
-them),
+- Flat-fielding 
 
 - Doing the brighter fatter correction (accounting for the distortion
 of the electric field lines at the bottom of pixels when bright
 objects liberate many charges that get trapped at the bottom of the
 potential wells),
 
-- Bias
-
-- Fringing
-
-- Gain
-
-- Linearization
-
-- Mask defects, and interpolate over them
-
-- Overscan
-
-- Saturation detection
-
-- Saturation interpln
-
-- Suspect pixel detection
 
 Brief Outline with Subtask Code Names
 ++++++++++++++++++++++++++++++++++++++
 
 Now the most general outline of the steps processCcd takes:
 
-1. Does the instrumental signature removal (ISR): it calls IsrTask to
+1. Does the instrumental signature removal (ISR): it calls IsrTask.py to
    process the raw data and assemble it into a post-ISR exposure.
    
 2. Characterizes the image to estimate PSF and background: Calls
-   charImage which subtracts the background, fits a PSF model, repairs
+   CharacterizeImageTask.py charImage which subtracts the background, fits a PSF model, repairs
    cosmic rays, detects and measures bright sources, and measures the
    aperture correction.
    
@@ -118,7 +103,16 @@ non-science pixels.
 
 IsrTask performs instrument signature removal on an exposure following these overall steps:
 
-- Detects saturation, apply overscan correction, bias subtraction, dark correction and flat-fielding 
+- Detects saturation: finding out which pixels have current which overfills their potential wells
+- Applies overscan correction
+- Does bias subtraction
+- Does dark correction: i.e. removing the dark current, which is the residual current seen even when no
+light is falling on the sensors)
+
+- Does flat-fielding: i.e. correcting for the different responsivity of the
+current coming from pixels to the same amount of light falling on
+them
+
 - Performs CCD assembly
 - Masks known bad pixels
 - Interpolates over defects, saturated pixels and all NaNs
