@@ -17,6 +17,21 @@ Real example version from the ci_hsc dir::
 
   processCcd.py $LSSTSW/ci_hsc/DATA --rerun ci_hsc --id visit=903986 ccd=23 --doraise
 
+This uses a ‘dataId’, which is a unique identifier for a specific data
+input. This can come in different formats, the one shown here uses the
+‘visit’ , ‘ccd’ identifiers used to refer to a specific CCD in a
+specific exposure (called a ‘visit’).
+
+The term 'rerun' originated in SDSS. It simply refers to a single
+processing run, performed with a specified version of the reduction
+code, and with a specific set of configuration parameters. The
+assumption is that within a given ‘rerun’, the data have been handled
+in a homogeneous way.
+
+Setting the 'doRaise' flag will raise an exception on error (else it
+would log a message and continue).
+			
+
 Overview of what ProcessCcd.py Does
 +++++++++++++++++++++++++++++++++++
 
@@ -45,16 +60,38 @@ SWARP codes, 'pinning' the image on the positions of known stars), and
 figures out the photometric zero-point for the image.
 
 
+How to use the ProcessCcd Task
+++++++++++++++++++++++++++++++
+
+This task is primarily designed to be run from the command line.  The
+main method is run, which takes a single butler data reference for the
+raw input data (i.e. the directory in which all the raw data files are
+stored, and where all the processed data files are to be written).
+
+
+..
+ Preparing the data for ProcessCcd 
+ ---------------------------------
 
 
 
-- Flat-fielding 
 
-- Doing the brighter fatter correction (accounting for the distortion
-of the electric field lines at the bottom of pixels when bright
-objects liberate many charges that get trapped at the bottom of the
-potential wells),
+Configuration parameters
+------------------------
 
+The Task has several Configurable Fields (functions of the pexConfig class):
+
+  - isr, which has as its target IsrTask
+
+  - charImage, which has as its target CharacterizeImageTask
+
+  - calibrate, which has as its target CalibrateTask
+
+    
+Debugging
+----------
+
+ProcessCcdTask has no debug output, but its several subtasks that it calls do.
 
 Brief Outline with Subtask Code Names
 ++++++++++++++++++++++++++++++++++++++
@@ -104,20 +141,26 @@ non-science pixels.
 IsrTask performs instrument signature removal on an exposure following these overall steps:
 
 - Detects saturation: finding out which pixels have current which overfills their potential wells
-- Applies overscan correction
-- Does bias subtraction
-- Does dark correction: i.e. removing the dark current, which is the residual current seen even when no
-light is falling on the sensors)
 
-- Does flat-fielding: i.e. correcting for the different responsivity of the
-current coming from pixels to the same amount of light falling on
-them
+- Does bias subtraction: removing the pedestal introduced by the instrument for a zero-second exposure (may use the overscan correction function)
+
+- Does dark correction: i.e. removing the dark current, which is the residual current seen even when no light is falling on the sensors
+
+- Does flat-fielding: i.e. correcting for the different responsivity of the current coming from pixels to the same amount of light falling on them
+
+- Does the brighter fatter correction: i.e. accounting for the distortion of the electric field lines at the bottom of pixels when bright objects liberate many charges that get trapped at the bottom of the potential wells
+
 
 - Performs CCD assembly
+
 - Masks known bad pixels
+
 - Interpolates over defects, saturated pixels and all NaNs
+
 - Provides a preliminary WCS
 
+List of IsrTask Functions
++++++++++++++++++++++++++
 
 Functions the code is capable of handling, though not all are used,
 depending on an image (in alphabetical order), with the links here going to the actual code:
@@ -206,7 +249,8 @@ Next, it makes the 3 exposures that we will be using in this example to create t
 
 (We are using functions defined in exampleUtils, also in the examples
 subdir inside $IP_ISR_DIR, these are modified versions of the standard
-functions inside the full Utils pkg (where is this?).
+functions which sit inside other pkgs normally.)
+
 
 Finally, the output is produced with the line::
 
@@ -332,6 +376,9 @@ background varies with time and telescope pointing.
 Gain
 ----
 
+This is accounting for how many electrons correspond to each ADU coming out of the sensors. 
+
+
 Linearity Correction
 --------------------
 
@@ -345,17 +392,20 @@ Were a correction necessary it would likely be implemented with a
 look-up table, and executed following the dark correction but prior to
 fringe correction.
 
-Mask defects
-------------
+..
+ Mask defects
+ ------------
 
-Masked pixel interpolation
-----------------------------
+ How to find the pixels that have problems 
 
-Mask NaNs
-------------
+ Masked pixel interpolation
+ ----------------------------
 
-Masked NaN interpolation
-----------------------------
+ Mask NaNs
+ ------------
+
+ Masked NaN interpolation
+ ----------------------------
 
 
 Overscan Correction
@@ -369,7 +419,10 @@ several interpln choices etc.
 Saturation detection
 ---------------------
 
-This one is fairly straightforward, most of the work is done in makeThresholdMask in isr.p
+This one is fairly straightforward -- it is finding the pixels that
+are saturated (have their potential wells full of charge).
+
+Most of the work is done in makeThresholdMask i
 
 
 Saturation Correction
@@ -392,15 +445,17 @@ only done in the x-direction, extending 2 pixels on each side of the
 defect. This is done both for simplicity and to ameliorate the way
 that saturation trails interact with bad columns.
 
-Suspect pixel detection
-------------------------
+..
+ Suspect pixel detection
+ ------------------------
 
-This seems to be part of the overscan correction in isr.py
+ This seems to be part of the overscan correction in isr.py
 
-Update variance plane
------------------------
+..
+ Update variance plane
+ -----------------------
 
 ____
 
 
-[Reference: Doxygen comments in code, and Section 4 of LSST DATA CHALLENGE HANDBOOK (2011) ]
+[Reference: Doxygen comments in code, and Section 4 of LSST DATA CHALLENGE HANDBOOK (2011), and http://hsca.ipmu.jp/public/index.html ]
