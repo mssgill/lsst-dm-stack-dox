@@ -1,4 +1,5 @@
 
+
 Characterizing an Image
 ========================
 

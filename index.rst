@@ -45,6 +45,7 @@ Contents:
    install
    ingest
    processccd
+   isrtask
    charimg
    assembleccd
    
