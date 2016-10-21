@@ -5,7 +5,7 @@ Characterizing an Image
 
 Given an exposure with defects repaired (masked and interpolated over, e.g. as output by IsrTask), this task does the kinds of things normally associated with e.g. SExtractor and PSFex.
 
-For example, it will:
+Some of its primary functions are to:
 
   - Detect and measure bright sources
 
@@ -13,7 +13,7 @@ For example, it will:
 
   - Measure and subtract background
 
-  - Measure PSF
+  - Measure the PSF
 
 
 
@@ -48,3 +48,24 @@ bool; if True display image and sources after final repair
 
 -measure
 bool; if True display image and sources after final measurement
+
+
+Specific functions of CharImg via example
++++++++++++++++++++++++++++++++++++++++++
+
+Cosmic Ray Repair
+-----------------
+
+ CharImg first detects CR's using the function RepairTask, whose
+ purpose is to initially detect the CR streaks, and then to
+ interpolate smoothly over them so that they are entirely masked out.
+
+Detect, Measure, and Estimate Psf 
+----------------------------------
+
+This installs a simple PSF model (replacing the existing one, if need be).
+
+  467         - interpolate over cosmic rays with keepCRs=True
+  468         - estimate background and subtract it from the exposure
+  469         - detect, deblend and measure sources, and subtract a refined background model;
+  470         - if config.doMeasurePsf:
