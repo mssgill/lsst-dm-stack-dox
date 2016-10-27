@@ -53,6 +53,24 @@ bool; if True display image and sources after final measurement
 Specific functions of CharImg via example
 +++++++++++++++++++++++++++++++++++++++++
 
+Overall: Once the exposures are processed initially minimally by IsrTask, it is passed here CharImg.
+
+   - Characterize the image: measure bright sources, fit a background and PSF, and repair cosmic rays
+     
+    - Calibrate the exposure: measure faint sources, fit an improved WCS and get the photometric zero-point
+
+Characterize
+------------
+
+This detect and measures sources and estimates the PSF.
+
+Interpolates over cosmic rays.
+
+Perform final measurement.
+
+Estimates a background for the exposure, and then subtracts this from the image itself.
+
+
 Cosmic Ray Repair
 -----------------
 
@@ -60,11 +78,16 @@ Cosmic Ray Repair
  purpose is to initially detect the CR streaks, and then to
  interpolate smoothly over them so that they are entirely masked out.
 
+ 
+ 
 Detect, Measure, and Estimate Psf 
 ----------------------------------
 
 This installs a simple PSF model (replacing the existing one, if need be).
 
+Returns a source catalog, background, PSF model.
+
+..
   467         - interpolate over cosmic rays with keepCRs=True
   468         - estimate background and subtract it from the exposure
   469         - detect, deblend and measure sources, and subtract a refined background model;
