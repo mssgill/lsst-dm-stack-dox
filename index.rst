@@ -47,5 +47,6 @@ Contents:
    processccd
    isrtask
    charimg
+   calibimg
    assembleccd
    
