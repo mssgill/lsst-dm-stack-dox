@@ -3,7 +3,9 @@
 Characterizing an Image
 ========================
 
-Given an exposure with defects repaired (masked and interpolated over, e.g. as output by IsrTask), this task does the kinds of things normally associated with e.g. SExtractor and PSFex.
+Given an exposure with defects repaired (masked and interpolated over,
+e.g. as output by IsrTask), this task does the kinds of things
+normally associated with e.g. SExtractor and PSFex.
 
 Some of its primary functions are to:
 
@@ -50,42 +52,61 @@ bool; if True display image and sources after final repair
 bool; if True display image and sources after final measurement
 
 
-Specific functions of CharImg via example
+
+Specific functions of CharImg
 +++++++++++++++++++++++++++++++++++++++++
 
-Overall: Once the exposures are processed initially minimally by IsrTask, it is passed here CharImg.
+Overall: Once the exposures are processed initially minimally by IsrTask, it is passed here to CharImg.
+
+The general steps:
 
    - Characterize the image: measure bright sources, fit a background and PSF, and repair cosmic rays
      
-    - Calibrate the exposure: measure faint sources, fit an improved WCS and get the photometric zero-point
+   - Calibrate the exposure: measure faint sources, fit an improved WCS and get the photometric zero-point
 
-Characterize
-------------
+Characterize (*characterize*)
+------------------------------
+
+The first thing this function does is check to see if the exposure has
+a PSF, and if the config.doMeasurePsf flag is set true.  If *both* of
+these are false, it raises a run-time error.
+
+It next sets up a default background if none has been set up previously.  (Next makes a deep copy of the mask.)
+
+Next estimates a background for the exposure (by calling the
+*estimateBackground* function from lsst.meas.algorithms), and then
+subtracts this from the image itself.
+
+Constructs a PSF by calling the detectMeasureAndEstimatePsf function of this same class.
 
 This detect and measures sources and estimates the PSF.
 
 Interpolates over cosmic rays.
 
-Perform final measurement.
-
-Estimates a background for the exposure, and then subtracts this from the image itself.
+Performs final measurement.
 
 
-Cosmic Ray Repair
------------------
+Cosmic Ray Repair (done within *characterize*)
+-------------------------------------------------
 
- CharImg first detects CR's using the function RepairTask, whose
+ CharImg first detects CR's using the function *RepairTask*, whose
  purpose is to initially detect the CR streaks, and then to
  interpolate smoothly over them so that they are entirely masked out.
 
- 
- 
-Detect, Measure, and Estimate Psf 
-----------------------------------
+detectAndMeasure.measure
+---------------------------
 
-This installs a simple PSF model (replacing the existing one, if need be).
+Perform final measurement with final PSF, including measuring and applying aperture correction (...?)
 
-Returns a source catalog, background, PSF model.
+Detect, Measure, and Estimate Psf (*detectMeasureAndEstimatePsf*) 
+-----------------------------------------------------------------
+
+This installs a simple PSF model (replacing the existing one, if need
+be).  Next runs CR repair, but doesn't interpolate over cosmic rays
+(we do that in *characterize*, with the final PSF model).  This is
+where the sources are detected, then deblended.
+
+At the end, a source catalog, background, and PSF model are returned.
 
 ..
   467         - interpolate over cosmic rays with keepCRs=True
