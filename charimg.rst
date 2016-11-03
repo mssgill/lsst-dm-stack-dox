@@ -58,55 +58,86 @@ Specific functions of CharImg
 
 Overall: Once the exposures are processed initially minimally by IsrTask, it is passed here to CharImg.
 
-The general steps:
+The primary workhorse functions are:
 
-   - Characterize the image: measure bright sources, fit a background and PSF, and repair cosmic rays
+   - Characterize the image: measure bright sources, fit a background and initial PSF, and repair cosmic rays
      
-   - Calibrate the exposure: measure faint sources, fit an improved WCS and get the photometric zero-point
+   - Detect and Measure the PSF: 
 
 Characterize (*characterize*)
 ------------------------------
 
 The first thing this function does is check to see if the exposure has
-a PSF, and if the config.doMeasurePsf flag is set true.  If *both* of
-these are false, it raises a run-time error.
-
-It next sets up a default background if none has been set up previously.  (Next makes a deep copy of the mask.)
-
-Next estimates a background for the exposure (by calling the
-*estimateBackground* function from lsst.meas.algorithms), and then
-subtracts this from the image itself.
-
-Constructs a PSF by calling the detectMeasureAndEstimatePsf function of this same class.
-
-This detect and measures sources and estimates the PSF.
-
-Interpolates over cosmic rays.
-
-Performs final measurement.
+a PSF, and if a specific flag that tells the code whether to measure
+the PSF (config.doMeasurePsf flag) is set true.  If *both* of these
+are false (i.e. it doesn't currently have a PSF, and it is not
+supposed to measure a PSF either), a run-time error is raised, because
+there is no PSF to analyze the image with subsequently.
 
 
-Cosmic Ray Repair (done within *characterize*)
--------------------------------------------------
+Next an initial background is estimated (by calling the 
+`estimateBackground`_ function), since this will be needed to make
+basic photometric measurements.
+
+.. _estimateBackground: https://lsst-web.ncsa.illinois.edu/doxygen/x_masterDoxyDoc/estimate_background_8py-example.html
+
+The next step is to do a straight subtraction of this background from
+the image itself, which is a necessary prerequisite to extracting out
+the actual objects in the image.
+
+Now a loop is executed a set number of times predetermined by a
+configuration parameter (*psfIterations*), and inside of this the PSF
+is determined iteratively (by calling the
+*detectMeasureAndEstimatePsf* method of charImg itself, detailed below).
+It's done this way so that every time it passes through and removes
+cosmic rays or other defects better, and thus a better PSF is then
+determined.
+
+..
+  a certain number. Constructs a PSF by calling the detectMeasureAndEstimatePsf function of this same class.
+
+  This detect and measures sources and estimates the PSF.
+
+  Perform final measurement with final PSF, including measuring and applying aperture correction (...?)
+
+At this point now actual interpolation over cosmic rays is done.
+
+(If desired, various displays to the screen of the screen and CR interpolation are done, for debugging purposes.)
+
+Now with the CR's interpolated over, sources extracted, and PSF and background determined, a function is called to do the final determination of the sources catalog and the actual image exposure (the *measure* function of *detectAndMeasure.py*, in pipe_tasks.)
+
+(And again, if desired, displays to the screen of the results of *measure*, for debugging purposes.)
+
+
+Detect, Measure, and Estimate Psf (*detectMeasureAndEstimatePsf*) 
+-----------------------------------------------------------------
+
+First thing done here is to install a simple PSF model (replacing the
+existing one, if need be, using the function *installSimplePsf* which
+points by default to `InstallGaussianPsfTask`_ ).  Next run is the CR
+repair function (which calls `RepairTask`_), to detect where they are,
+but at this point interpolation over cosmic rays is not done (we do
+that in *characterize*, once we have the final PSF model).  We do want
+to know where the CR's are at this point though in order to properly
+do source detection, which is indeed the next step (through the *run*
+function of *detectAndMeasure.py*).  A deblender is also run at this
+point, to separate the overlapping sources.  Further, a version of the PSF in a cellSet format, is created here, based on the source catalog.
+
+.. _InstallGaussianPsfTask: https://lsst-web.ncsa.illinois.edu/doxygen/x_masterDoxyDoc/classlsst_1_1meas_1_1algorithms_1_1install_gaussian_psf_1_1_install_gaussian_psf_task.html#InstallGaussianPsfTask_
+
+.. _RepairTask: https://lsst-web.ncsa.illinois.edu/doxygen/x_masterDoxyDoc/classlsst_1_1pipe_1_1tasks_1_1repair_1_1_repair_task.html#RepairTask_
+
+
+At the end, a source catalog, background, and PSF model are returned to the calling function (*characterize*).
+
+..
+ Cosmic Ray Repair (done within *characterize*)
+ -------------------------------------------------
 
  CharImg first detects CR's using the function *RepairTask*, whose
  purpose is to initially detect the CR streaks, and then to
  interpolate smoothly over them so that they are entirely masked out.
 
-detectAndMeasure.measure
----------------------------
-
-Perform final measurement with final PSF, including measuring and applying aperture correction (...?)
-
-Detect, Measure, and Estimate Psf (*detectMeasureAndEstimatePsf*) 
------------------------------------------------------------------
-
-This installs a simple PSF model (replacing the existing one, if need
-be).  Next runs CR repair, but doesn't interpolate over cosmic rays
-(we do that in *characterize*, with the final PSF model).  This is
-where the sources are detected, then deblended.
-
-At the end, a source catalog, background, and PSF model are returned.
 
 ..
   467         - interpolate over cosmic rays with keepCRs=True
