@@ -42,11 +42,15 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
+   template
    install
    ingest
    processccd
    isrtask
    charimg
    calibimg
+   deblendimg
+   
+..
    assembleccd
    
