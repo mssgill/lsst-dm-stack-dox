@@ -50,7 +50,7 @@ Contents:
    charimg
    calibimg
    deblendimg
-   
+   astrometry   
 ..
    assembleccd
    

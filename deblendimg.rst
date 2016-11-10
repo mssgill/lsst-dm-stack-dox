@@ -13,20 +13,48 @@ Specific functions of class
 deblend
 -------
 
-This is the key function in which the deblending is done.  It takes the exposure, and the src catalog as has been output by e.g. processCcd, as those are the two primary things it will need to figure out which srcs are overlapping.
+This is the key function in which the deblending is done.  It takes
+the exposure, and the src catalog as has been output by
+e.g. processCcd, as those are the two primary things it will need to
+figure out which srcs are overlapping.
 
-There is another special import done here that calls the actual deblend function from the same dir where this class lives (*lsst.meas.deblender*).  As the algorithm that is to be used for deblending is currently still being developed and has not been settled upon, it can be swapped in and out at this point without affecting the rest of the structure of the deblending.
+There is another special import done here that calls the actual
+deblend function from the same dir where this class lives
+(*lsst.meas.deblender*).  As the algorithm that is to be used for
+deblending is currently still being developed and has not been settled
+upon, it can be swapped in and out at this point without affecting the
+rest of the structure of the deblending.
 
-The first step of this function is to start a loop over all the objects in the srcs catalog.  Inside the loop, the footprint for this src is extracted, and number of peaks inside the current source is checked.  If it's zero or unity, we pop out of this loop because of course this just means there is at most one identified object in this src, and nothing is thus overlapping.
+In the end, the srcs catalog is modified in place to separately
+contain all deblended objects.
 
-[But what does zero peaks mean..?]
+[**Internals**:
 
-[And what's a 'large footprint'?]
+The first step of this function is to start a loop over all the
+objects in the srcs catalog.  Inside the loop, the footprint for this
+src is extracted, and number of peaks inside the current source is
+checked.  If it's zero or unity, we pop out of this loop because of
+course this just means there is at most one identified object in this
+src, and nothing is thus overlapping.  [But what does zero peaks mean..?]
 
-If the footprint is masked out, we also pop out of the loop, since do not analyze masked areas.
+If the footprint of the given source is very large beyond a preset
+value, then deblending of this source will be skipped.  'Large' is
+defined by thresholds on the area, size and axis ratio.  This test is
+principally intended to get rid of satellite streaks, which the
+deblender or other downstream processing can have trouble dealing with
+(e.g., trying to deblend multiple large srcs can chew up memory).
 
-Now we try to actually deblend this source by sending it, along with the footprint, PSF, and a number of config params to the deblend algorithm.  If it works, we put the entire result into a variable (*res*), but if not, we'll raise an error depending or pop out of the loop depending on whether a certain flag (*deblendFailedKey*) is set.
+If the footprint is masked out, we also pop out of the loop, since we do
+not analyze masked areas.
 
-We then go through the whole set of children that have been deblended, and properly set the footprint for each of these, which can be an involved process to not overlap any pixels etc. [is that what the long kids loop does?]
+Now we try to actually deblend this source by sending it, along with
+the footprint, PSF, and a number of config params to the deblend
+algorithm.  If it works, we put the entire result into a variable
+(*res*), but if not, we'll raise an error depending or pop out of the
+loop depending on whether a certain flag (*deblendFailedKey*) is set.
 
-In the end, the srcs catalog is modified in place to separately contain all deblended objects. [i think..?]
+We then go through the whole set of children that have been deblended,
+and properly set the footprint for each of these, which can be an
+involved process to not overlap any pixels etc. [is that what the long
+kids loop does?]  ]
+
