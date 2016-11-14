@@ -51,6 +51,14 @@ Contents:
    calibimg
    deblendimg
    astrometry   
-..
    assembleccd
-   
+   diacat
+   forcedmeas
+   singleframemeas
+   dipolemeas
+   decorrALkernel
+   imagepsfmatch
+   modelpsfmatch
+   psfmatch
+   snappsfmatch
+   safeclipassemble
