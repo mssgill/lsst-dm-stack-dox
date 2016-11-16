@@ -2,6 +2,9 @@
 AstrometryTask
 ==============
 
+- `Doxygen link`_
+.. _Doxygen link: https://lsst-web.ncsa.illinois.edu/doxygen/x_masterDoxyDoc/classlsst_1_1meas_1_1astrom_1_1astrometry_1_1_astrometry_task.html#AstrometryTask_
+
 The essential function for this task is to match an input sourceCat
 with a reference catalog and solve for the WCS across the field.
 

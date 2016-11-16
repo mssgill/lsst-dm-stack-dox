@@ -3,9 +3,12 @@
  measure faint sources, fit an improved WCS and get the photometric zero-point
 
 
-Calibrating an Image
+CalibrateTask
 =====================
 
+- `Doxygen link`_
+.. _Doxygen link: https://lsst-web.ncsa.illinois.edu/doxygen/x_masterDoxyDoc/classlsst_1_1pipe_1_1tasks_1_1calibrate_1_1_calibrate_task.html#CalibrateTask_
+   
 Overall:
 
 
@@ -19,7 +22,11 @@ Overall:
 
     - Run photoCal subtask to fit the exposure's photometric zero-point
 
+
       
+How to call with options/flags
+++++++++++++++++++++++++++++++
+
 
 Debugging
 +++++++++
@@ -95,3 +102,13 @@ Match sources in icSourceCat (which is a source catalog from the *CharacterizeIm
 
 
 
+Examples
+++++++++
+
+This code is in calibrateTask.py in the examples directory, and can be run as, e.g.:
+
+     python examples/calibrateTask.py --display
+
+    
+What it returns
++++++++++++++++

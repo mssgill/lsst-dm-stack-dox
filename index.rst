@@ -42,23 +42,23 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
-   template
-   install
-   ingest
-   processccd
-   isrtask
-   charimg
-   calibimg
-   deblendimg
    astrometry   
    assembleccd
+   calibimg
+   charimg
    diacat
-   forcedmeas
-   singleframemeas
-   dipolemeas
    decorrALkernel
+   deblendimg
+   dipolemeas
+   forcedmeas
    imagepsfmatch
+   ingest
+   install
+   isrtask
    modelpsfmatch
+   processccd
    psfmatch
-   snappsfmatch
    safeclipassemble
+   singleframemeas
+   snappsfmatch
+   template

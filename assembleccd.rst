@@ -2,6 +2,9 @@
 AssembleCcdTask
 =========================================
 
+- `Doxygen link`_
+.. _Doxygen link: https://lsst-web.ncsa.illinois.edu/doxygen/x_masterDoxyDoc/classlsst_1_1ip_1_1isr_1_1assemble_ccd_task_1_1_assemble_ccd_task.html#AssembleCcdTask_
+
     This task assembles sections of an image into a larger mosaic.  The sub-sections
     are typically amplifier sections and are to be assembled into a detector size pixel grid.
     The assembly is driven by the entries in the raw amp information.  The task can be configured
