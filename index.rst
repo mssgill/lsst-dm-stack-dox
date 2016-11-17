@@ -46,19 +46,43 @@ Contents:
    assembleccd
    calibimg
    charimg
+   coaddsrcxform
    diacat
    decorrALkernel
    deblendimg
+   detectcoaddsrcs
    dipolemeas
+   examplecmdline
+   examplesigmaclippedstats
+   examplesimplestats
+   fittansip
    forcedmeas
+   forcedsrcxform
    imagepsfmatch
    ingest
    install
+   installgaussianpsf
    isrtask
+   loadastrom
+   loadrefobjects
+   measureapcorr
+   measuremergedcoaddsrcs
+   mergedets
+   mergemeasts
    modelpsfmatch
+   objectsizestarsel
    processccd
+   propvisitflags
    psfmatch
+   readfitscat
+   readtextcat
    safeclipassemble
+   secondmomentstarsel
    singleframemeas
+   sourcedet
+   srcxform
+   subtractbkgd
+   snapcombine
    snappsfmatch
+   xform
    template

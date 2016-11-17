@@ -1,7 +1,11 @@
 
 
-Characterizing an Image
-========================
+CharacterizeTask
+================
+
+
+- `Doxygen link`_
+.. _Doxygen link: https://lsst-web.ncsa.illinois.edu/doxygen/x_masterDoxyDoc/classlsst_1_1pipe_1_1tasks_1_1characterize_image_1_1_characterize_image_task.html#CharacterizeImageTask_
 
 Given an exposure with defects repaired (masked and interpolated over,
 e.g. as output by IsrTask), this task does the kinds of things
