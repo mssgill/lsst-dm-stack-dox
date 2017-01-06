@@ -1,7 +1,6 @@
 
-Doing the Instrumental Signature Removal
+IsrTask 
 =========================================
-
 
 Instrumental Signature Removal (ISR) is a sequence of steps taken to
 'clean' images of various aspects of defects that any system of optics

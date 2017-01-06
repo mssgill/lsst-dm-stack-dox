@@ -21,6 +21,55 @@ the user has this installed already, along with the entire DM Stack
 for the cmds to work.  For quick pointers on where to go to know how
 to do the install, see the first link in the 'Contents' below.
 
+Current Status
+--------------
+
+   astrometry    - need to find location of this exx code
+   assembleccd   - covered at a decent level, needs cleanup
+   calibimg      - needs running
+   charimg
+   coaddsrcxform
+   diacat
+   decorrALkernel
+   deblendimg
+   detectcoaddsrcs
+   dipolemeas
+   examplecmdline
+   examplesigmaclippedstats
+   examplesimplestats
+   fittansip
+   
+   forcedmeas
+   forcedsrcxform
+   imagepsfmatch
+   ingest
+   install
+   installgaussianpsf
+   isrtask
+   loadastrom
+   loadrefobjects
+   measureapcorr
+   measuremergedcoaddsrcs
+   mergedets
+   mergemeasts
+   modelpsfmatch
+   objectsizestarsel
+   processccd
+   propvisitflags
+   psfmatch
+   readfitscat
+   readtextcat
+   safeclipassemble
+   secondmomentstarsel
+   singleframemeas
+   sourcedet
+   srcxform
+   subtractbkgd
+   snapcombine
+   snappsfmatch
+   xform
+   template
+
 Brief description of image processing
 --------------------------------------
 
